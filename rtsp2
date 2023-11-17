@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Set the RTSP server address and port
+rtsp_server_address="192.168.1.100"
+rtsp_server_port="554"
+
+# Create a temporary file for storing the telnet output
+temp_file=$(mktemp)
+
+# Connect to the RTSP server using telnet
+telnet $rtsp_server_address $rtsp_server_port > $temp_file
+
+# Send the OPTIONS request to get the supported methods
+echo "OPTIONS rtsp://$rtsp_server_address:$rtsp_server_port/stream RTSP/1.0" >> $temp_file
+
+# Send theDESCRIBErequest to get the SDP description
+echo "DESCRIBE rtsp://$rtsp_server_address:$rtsp_server_port/stream RTSP/1.0" >> $temp_file
+
+# Send theSETUPrequest to set up the stream for playback
+echo "SETUP rtsp://$rtsp_server_address:$rtsp_server_port/stream RTSP/1.0" >> $temp_file
+echo "Transport: RTP/UDP;unicast=client_port;client_ip=192.168.1.100;server_port=554;server_ip=192.168.1.100" >> $temp_file
+
+# Send thePLAYrequest to start playing the stream
+echo "PLAY rtsp://$rtsp_server_address:$rtsp_server_port/stream RTSP/1.0" >> $temp_file
+echo "Range: npt=0.0-" >> $temp_file
+
+# Send thePAUSErequest to pause the stream
+echo "PAUSE rtsp://$rtsp_server_address:$rtsp_server_port/stream RTSP/1.0" >> $temp_file
+
+# Send theTEARDOWNrequest to tear down the stream
+echo "TEARDOWN rtsp://$rtsp_server_address:$rtsp_server_port/stream RTSP/1.0" >> $temp_file
+
+# Close the telnet connection
+echo "" >> $temp_file
+
+# Process the telnet output and extract the supported methods
+methods=$(grep -Po 'CSeq:\s+\d+' $temp_file | cut -d ':' -f 2)
+
+# Display the supported methods
+for method in $methods; do
+    echo "Method: $method"
+done
+
+# Delete the temporary file
+rm $temp_file
