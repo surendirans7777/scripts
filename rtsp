@@ -1,0 +1,19 @@
+#!/bin/bash
+
+RTSP_SERVER="your.rtsp.server"  # Replace with the actual RTSP server address
+RTSP_PORT="554"  # Replace with the actual RTSP server port
+
+# Function to check RTSP methods
+check_method() {
+    echo -e "Checking $1 method..."
+    echo -e "$1 rtsp://$RTSP_SERVER:$RTSP_PORT RTSP/1.0\r\n" | telnet $RTSP_SERVER $RTSP_PORT | grep "RTSP/1.0"
+    echo -e "------------------------\n"
+}
+
+# List of RTSP methods to check
+RTSP_METHODS=("OPTIONS" "DESCRIBE" "SETUP" "PLAY" "PAUSE" "TEARDOWN" "GET_PARAMETER" "SET_PARAMETER")
+
+# Loop through and check each RTSP method
+for method in "${RTSP_METHODS[@]}"; do
+    check_method $method
+done
